@@ -51,7 +51,8 @@ Ticker mqttReconnectTimer;
 GAsyncMqttClient mqttClient;
 void connectToMqtt();
 // JSONVar payloadJson;
-double latest_payload[LED_MATRIX_WIDTH];
+double latest_fast_bar_values[LED_MATRIX_WIDTH];
+double latest_slow_bar_values[LED_MATRIX_WIDTH];
 
 AsyncWebServer server(80);
 
@@ -142,8 +143,10 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
     if (strcmp(topic, "data/service/audio_vis") == 0) {
       JSONVar payloadJson = JSON.parse(new_payload);
       JSONVar fast_bar_values = payloadJson["fast_bar_values"];
+      JSONVar slow_bar_values = payloadJson["slow_bar_values"];
       for (int i=0; i<LED_MATRIX_WIDTH; i++) {
-        latest_payload[i] = (double) fast_bar_values[i];
+        latest_fast_bar_values[i] = (double) fast_bar_values[i];
+        latest_slow_bar_values[i] = (double) slow_bar_values[i];
       }
       delete payloadJson;
     }
@@ -369,10 +372,13 @@ void gol(int A[][8], int n, int m) {
 
 void audio_vis() {
   for (int i=0; i<LED_MATRIX_WIDTH; i++) {
-    double bar_height = latest_payload[i] * LED_MATRIX_HEIGHT;
+    double fast_bar_height = latest_fast_bar_values[i] * LED_MATRIX_HEIGHT;
+    double slow_bar_height = latest_slow_bar_values[i] * LED_MATRIX_HEIGHT;
     for (int j=0; j<LED_MATRIX_HEIGHT; j++) {
-      if (LED_MATRIX_HEIGHT - j <= bar_height + 1) {
+      if (LED_MATRIX_HEIGHT - j == int(slow_bar_height) + 1) {
         matrix->drawPixel(i, j, matrix->Color24to16(CRGB::Wheat));
+      } else if (LED_MATRIX_HEIGHT - j <= fast_bar_height + 1) {
+        matrix->drawPixel(i, j, matrix->Color24to16(CRGB::CornflowerBlue));
       } else {
         matrix->drawPixel(i, j, matrix->Color24to16(CRGB::Black));
       }
