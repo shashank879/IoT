@@ -1,0 +1,3 @@
+[submodule "common/python/Realtime_PyAudio_FFT"]
+	path = common/python/Realtime_PyAudio_FFT
+	url = git://github.com/tr1pzz/Realtime_PyAudio_FFT.git

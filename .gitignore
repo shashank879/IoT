@@ -1,0 +1,10 @@
+.pyenv/
+pyvenv.cfg
+Lib/
+Scripts/
+.vscode/
+**passwd**
+**/__pycache__/**
+**log
+mqtt_server.config
+**.pio/
