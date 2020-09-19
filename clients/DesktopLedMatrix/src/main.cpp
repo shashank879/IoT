@@ -7,7 +7,7 @@
 #include <AsyncElegantOTA.h>
 #include <WebSerial.h>
 #include <Ticker.h>
-#include <AsyncMqttClient.h>
+#include <GAsyncMqttClient.cpp>
 #include <Arduino_JSON.h>
 
 #include <FastLED.h>
@@ -48,7 +48,7 @@ WiFiEventHandler wifiDisconnectHandler;
 Ticker wifiReconnectTimer;
 
 Ticker mqttReconnectTimer;
-AsyncMqttClient mqttClient;
+GAsyncMqttClient mqttClient;
 void connectToMqtt();
 // JSONVar payloadJson;
 double latest_payload[LED_MATRIX_WIDTH];
@@ -147,6 +147,8 @@ void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties 
       }
       delete payloadJson;
     }
+  } else {
+    WebSerial.println("Packet loss.");
   }
 }
 
@@ -161,7 +163,7 @@ void setup_mqtt() {
   mqttClient.onDisconnect(onMqttDisconnect);
   mqttClient.onSubscribe(onMqttSubscribe);
   mqttClient.onUnsubscribe(onMqttUnsubscribe);
-  mqttClient.onMessage(onMqttMessage);
+  mqttClient.onGMessage(onMqttMessage);
   mqttClient.onPublish(onMqttPublish);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
