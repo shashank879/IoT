@@ -36,6 +36,10 @@ extern "C" {
 CRGB matrixleds[NUMMATRIX];
 int A[LED_MATRIX_WIDTH][LED_MATRIX_HEIGHT];
 int B[LED_MATRIX_WIDTH][LED_MATRIX_HEIGHT];
+CRGBPalette16 color_palette = RainbowColors_p;
+TBlendType color_blending = LINEARBLEND;
+int brightness = 5;
+int x_offset = LED_MATRIX_WIDTH;
 
 FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(
   matrixleds,
@@ -57,7 +61,7 @@ double latest_slow_bar_values[LED_MATRIX_WIDTH];
 AsyncWebServer server(80);
 
 unsigned long timestamp = 0;
-unsigned long interval = 80; //interval of 80 milliseconds
+unsigned long interval = 30; //interval of 80 milliseconds
 // Ticker screenUpdateTimer;
 void gol(int A[][8], int n, int m);
 void audio_vis();
@@ -134,7 +138,10 @@ void onMqttUnsubscribe(uint16_t packetId) {
   WebSerial.println(packetId);
 }
 
-void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+void onMqttMessage(char* topic,
+                   char* payload,
+                   AsyncMqttClientMessageProperties properties,
+                   size_t len, size_t index, size_t total) {
   if (len == total) {
     char new_payload[len+1];
     new_payload[len] = '\0';
@@ -274,7 +281,7 @@ void setup_ota(void) {
 void setup_led(void) {
   FastLED.addLeds<NEOPIXEL,PIN>(matrixleds, NUMMATRIX);
   matrix->setTextWrap(false);
-  matrix->setBrightness(5);
+  matrix->setBrightness(brightness);
   matrix->begin();
   // matrix->setTextColor(colors[0]);
   // screenUpdateTimer.attach_scheduled(interval, updateScreen);
@@ -374,15 +381,22 @@ void audio_vis() {
   for (int i=0; i<LED_MATRIX_WIDTH; i++) {
     double fast_bar_height = latest_fast_bar_values[i] * LED_MATRIX_HEIGHT;
     double slow_bar_height = latest_slow_bar_values[i] * LED_MATRIX_HEIGHT;
+    int color_index = (i + x_offset) % LED_MATRIX_WIDTH;
+    int scaled_color_index = color_index * 255 / LED_MATRIX_WIDTH;
+    CRGB color = ColorFromPalette(color_palette, scaled_color_index);
     for (int j=0; j<LED_MATRIX_HEIGHT; j++) {
       if (LED_MATRIX_HEIGHT - j == int(slow_bar_height) + 1) {
         matrix->drawPixel(i, j, matrix->Color24to16(CRGB::Wheat));
-      } else if (LED_MATRIX_HEIGHT - j <= fast_bar_height + 1) {
-        matrix->drawPixel(i, j, matrix->Color24to16(CRGB::CornflowerBlue));
+      } else if (LED_MATRIX_HEIGHT - j <= fast_bar_height) {
+        matrix->drawPixel(i, j, color);
       } else {
         matrix->drawPixel(i, j, matrix->Color24to16(CRGB::Black));
       }
     }
+  }
+  x_offset -= 1;
+  if (x_offset < 0) {
+    x_offset = LED_MATRIX_WIDTH;
   }
 }
 

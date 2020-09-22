@@ -14,7 +14,7 @@ class AudioVisualizerService(ByteStreamService):
         return {"service_name":"service/audio_vis",
                 "topic":"audio_vis"}
 
-    def init_service(self, fps=60, avg_energy_height=0.1525, decay_speed=0.1):
+    def init_service(self, fps=60, avg_energy_height=0.1525, decay_speed=0.25):
         super(AudioVisualizerService, self).init_service(fps=fps)
         self.avg_energy_height = avg_energy_height
         self.decay_speed = decay_speed
